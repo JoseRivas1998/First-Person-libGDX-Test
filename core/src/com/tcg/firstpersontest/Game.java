@@ -11,7 +11,10 @@ import com.badlogic.gdx.graphics.VertexAttributes.Usage;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g3d.*;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
+import com.badlogic.gdx.graphics.g3d.attributes.FloatAttribute;
+import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
+import com.badlogic.gdx.graphics.g3d.environment.PointLight;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.math.MathUtils;
@@ -24,24 +27,24 @@ public class Game extends ApplicationAdapter {
     PerspectiveCamera camera;
     Environment environment;
     ModelBatch modelBatch;
-    Model model;
-    ModelInstance modelInstance;
+    Model model, wallModel;
+    ModelInstance modelInstance, wallModelInstance, wallModelInstance1, wallModelInstance2, wallModelInstance3, wallModelInstance4, wallModelInstance5;
     float width, height, centerX, centerY;
     boolean centerMouse;
     float velY;
-    SpriteBatch spriteBatch;
-    Texture img;
+    Texture img, img32;
 
 	@Override
 	public void create () {
 
         environment = new Environment();
         environment.set(new ColorAttribute(ColorAttribute.AmbientLight, .4f, .4f, .4f, 1));
-        environment.add(new DirectionalLight().set(.8f, .8f, .8f, -1f, -.8f, -.2f));
+//        environment.add(new DirectionalLight().set(.8f, .8f, .8f, -1f, -.8f, -.2f));
+        environment.add(new PointLight().set(Color.WHITE, 0f, 25f, 0f, 500f));
 
         modelBatch = new ModelBatch();
-        spriteBatch = new SpriteBatch();
         img = new Texture("badlogic.jpg");
+        img32 = new Texture("32.png");
 
         camera = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
         camera.position.set(10f, 10f, 10f);
@@ -51,8 +54,35 @@ public class Game extends ApplicationAdapter {
         camera.update();
 
         ModelBuilder modelBuilder = new ModelBuilder();
-        model = modelBuilder.createBox(5f, 5f, 5f, new Material(ColorAttribute.createDiffuse(Color.GREEN)), Usage.Position | Usage.Normal);
+//        model = modelBuilder.createBox(5f, 5f, 5f, new Material(ColorAttribute.createDiffuse(Color.GREEN)), Usage.Position | Usage.Normal);
+        model = modelBuilder.createBox(5f, 5f, 5f, new Material(TextureAttribute.createDiffuse(img32), ColorAttribute.createSpecular(1, 1, 1, 1), FloatAttribute.createShininess(8f)), Usage.Position | Usage.Normal | Usage.TextureCoordinates);
+        wallModel = modelBuilder.createBox(50f, .1f, 50f, new Material(TextureAttribute.createDiffuse(img), ColorAttribute.createSpecular(1, 1, 1, 1), FloatAttribute.createShininess(8f)), Usage.Position | Usage.Normal | Usage.TextureCoordinates);
         modelInstance = new ModelInstance(model);
+        modelInstance.transform.translate(0, 2.5f, 0);
+        wallModelInstance = new ModelInstance(wallModel);
+        wallModelInstance1 = new ModelInstance(wallModel);
+        wallModelInstance1.transform.setToRotation(Vector3.X, 90);
+        wallModelInstance1.transform.setToRotation(Vector3.Z, 90);
+        wallModelInstance1.transform.trn(25, 25, 0);
+        wallModelInstance1.calculateTransforms();
+        wallModelInstance2 = new ModelInstance(wallModel);
+        wallModelInstance2.transform.setToRotation(Vector3.X, 90);
+        wallModelInstance2.transform.setToRotation(Vector3.Z, 90);
+        wallModelInstance2.transform.trn(-25, 25, 0);
+        wallModelInstance2.calculateTransforms();
+        wallModelInstance3 = new ModelInstance(wallModel);
+        wallModelInstance3.transform.setToRotation(Vector3.X, 90);
+        wallModelInstance3.transform.rotate(Vector3.Y, 90);
+        wallModelInstance3.transform.trn(0, 25, 25);
+        wallModelInstance3.calculateTransforms();
+        wallModelInstance4 = new ModelInstance(wallModel);
+        wallModelInstance4.transform.setToRotation(Vector3.X, 90);
+        wallModelInstance4.transform.rotate(Vector3.Y, 90);
+        wallModelInstance4.transform.trn(0, 25, -25);
+        wallModelInstance4.calculateTransforms();
+        wallModelInstance5 = new ModelInstance(wallModel);
+        wallModelInstance5.transform.trn(0, 50, 0);
+        wallModelInstance5.calculateTransforms();
 
         width = Gdx.graphics.getWidth();
         height = Gdx.graphics.getHeight();
@@ -62,6 +92,7 @@ public class Game extends ApplicationAdapter {
 
         centerMouse = true;
         Gdx.input.setCursorCatched(centerMouse);
+        Gdx.input.setCursorPosition((int) centerX, (int) centerY);
 
         velY = 0;
 
@@ -113,17 +144,32 @@ public class Game extends ApplicationAdapter {
             v.rotate(Vector3.Y, 90);
             camera.translate(v);
         }
-        if(camera.position.y > 5) {
+        if(camera.position.y > 7) {
             velY -= .25f;
-        } else if(camera.position.y <= 5) {
+        } else if(camera.position.y <= 7) {
             velY = 0;
-            camera.position.y = 5;
+            camera.position.y = 7;
         }
-        if(Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
+        if(Gdx.input.isKeyJustPressed(Input.Keys.SPACE) && camera.position.y <= 7) {
             velY = 3;
         }
         camera.translate(new Vector3(0, velY, 0));
-        Gdx.graphics.setTitle(camera.direction.toString());
+//        Gdx.graphics.setTitle(camera.position.toString());
+        if(camera.position.x  > 23f) {
+            camera.position.x = 23f;
+        }
+        if(camera.position.x < -23f) {
+            camera.position.x = -23f;
+        }
+        if(camera.position.z  > 23f) {
+            camera.position.z = 23f;
+        }
+        if(camera.position.z < -23f) {
+            camera.position.z = -23f;
+        }
+        if(Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT)) {
+            camera.position.y -= 1;
+        }
         camera.update();
         if(Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)) {
             centerMouse = !centerMouse;
@@ -131,24 +177,23 @@ public class Game extends ApplicationAdapter {
             Gdx.input.setCursorCatched(centerMouse);
         }
 
-//        camera.rotate(Vector3.Z, 1);
-//        camera.update();
-
         modelBatch.begin(camera);
         modelBatch.render(modelInstance, environment);
+        modelBatch.render(wallModelInstance, environment);
+        modelBatch.render(wallModelInstance1, environment);
+        modelBatch.render(wallModelInstance2, environment);
+        modelBatch.render(wallModelInstance3, environment);
+        modelBatch.render(wallModelInstance4, environment);
+        modelBatch.render(wallModelInstance5, environment);
         modelBatch.end();
-        spriteBatch.begin();
-        spriteBatch.setProjectionMatrix(camera.combined);
-        spriteBatch.draw(img, 0, 0, img.getWidth() * .5f, img.getHeight() * .5f);
-        spriteBatch.end();
 	}
 	
 	@Override
 	public void dispose () {
         model.dispose();
+        wallModel.dispose();
         modelBatch.dispose();
         img.dispose();
-        spriteBatch.dispose();
 	}
 
     @Override
