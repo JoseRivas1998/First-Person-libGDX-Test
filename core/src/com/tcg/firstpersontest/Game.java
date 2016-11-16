@@ -3,6 +3,8 @@ package com.tcg.firstpersontest;
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.assets.AssetManager;
+import com.badlogic.gdx.assets.loaders.ModelLoader;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
@@ -15,6 +17,7 @@ import com.badlogic.gdx.graphics.g3d.attributes.FloatAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.graphics.g3d.environment.PointLight;
+import com.badlogic.gdx.graphics.g3d.loader.ObjLoader;
 import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.math.MathUtils;
@@ -29,18 +32,21 @@ public class Game extends ApplicationAdapter {
     ModelBatch modelBatch;
     Model model, wallModel;
     ModelInstance modelInstance, wallModelInstance, wallModelInstance1, wallModelInstance2, wallModelInstance3, wallModelInstance4, wallModelInstance5;
+    AssetManager assetManager;
+    ModelInstance skyBox;
     float width, height, centerX, centerY;
     boolean centerMouse;
     float velY;
     Texture img, img32;
+    boolean loading;
 
 	@Override
 	public void create () {
 
         environment = new Environment();
         environment.set(new ColorAttribute(ColorAttribute.AmbientLight, .4f, .4f, .4f, 1));
-//        environment.add(new DirectionalLight().set(.8f, .8f, .8f, -1f, -.8f, -.2f));
-        environment.add(new PointLight().set(Color.WHITE, 0f, 25f, 0f, 500f));
+        environment.add(new DirectionalLight().set(.8f, .8f, .8f, -1f, -.8f, -.2f));
+//        environment.add(new PointLight().set(Color.WHITE, 0f, 25f, 0f, 500f));
 
         modelBatch = new ModelBatch();
         img = new Texture("badlogic.jpg");
@@ -50,7 +56,7 @@ public class Game extends ApplicationAdapter {
         camera.position.set(10f, 10f, 10f);
         camera.lookAt(0, 0, 0);
         camera.near = 1f;
-        camera.far = 300f;
+        camera.far = 500f;
         camera.update();
 
         ModelBuilder modelBuilder = new ModelBuilder();
@@ -94,12 +100,26 @@ public class Game extends ApplicationAdapter {
         Gdx.input.setCursorCatched(centerMouse);
         Gdx.input.setCursorPosition((int) centerX, (int) centerY);
 
+        assetManager = new AssetManager();
+        assetManager.load("data/starskybox.g3db", Model.class);
+
+        loading = true;
+
         velY = 0;
 
 	}
 
+	private void load() {
+
+        skyBox = new ModelInstance(assetManager.get("data/starskybox.g3db", Model.class));
+
+        loading = false;
+
+    }
+
 	@Override
 	public void render () {
+        if(loading && assetManager.update()) load();
 		Gdx.gl.glClearColor(1, 0, 0, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 
@@ -180,11 +200,12 @@ public class Game extends ApplicationAdapter {
         modelBatch.begin(camera);
         modelBatch.render(modelInstance, environment);
         modelBatch.render(wallModelInstance, environment);
-        modelBatch.render(wallModelInstance1, environment);
-        modelBatch.render(wallModelInstance2, environment);
-        modelBatch.render(wallModelInstance3, environment);
-        modelBatch.render(wallModelInstance4, environment);
-        modelBatch.render(wallModelInstance5, environment);
+//        modelBatch.render(wallModelInstance1, environment);
+//        modelBatch.render(wallModelInstance2, environment);
+//        modelBatch.render(wallModelInstance3, environment);
+//        modelBatch.render(wallModelInstance4, environment);
+//        modelBatch.render(wallModelInstance5, environment);
+        if(skyBox != null) modelBatch.render(skyBox);
         modelBatch.end();
 	}
 	
