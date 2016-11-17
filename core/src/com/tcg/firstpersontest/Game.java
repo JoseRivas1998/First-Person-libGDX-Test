@@ -4,25 +4,17 @@ import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.assets.AssetManager;
-import com.badlogic.gdx.assets.loaders.ModelLoader;
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.VertexAttributes.Usage;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g3d.*;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.FloatAttribute;
 import com.badlogic.gdx.graphics.g3d.attributes.TextureAttribute;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
-import com.badlogic.gdx.graphics.g3d.environment.PointLight;
-import com.badlogic.gdx.graphics.g3d.loader.ObjLoader;
-import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
 import com.badlogic.gdx.graphics.g3d.utils.ModelBuilder;
 import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.math.Quaternion;
-import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 
 public class Game extends ApplicationAdapter {
@@ -34,6 +26,7 @@ public class Game extends ApplicationAdapter {
     ModelInstance modelInstance, wallModelInstance, wallModelInstance1, wallModelInstance2, wallModelInstance3, wallModelInstance4, wallModelInstance5;
     AssetManager assetManager;
     ModelInstance skyBox;
+    ModelInstance building;
     float width, height, centerX, centerY;
     boolean centerMouse;
     float velY;
@@ -56,13 +49,13 @@ public class Game extends ApplicationAdapter {
         camera.position.set(10f, 10f, 10f);
         camera.lookAt(0, 0, 0);
         camera.near = 1f;
-        camera.far = 500f;
+        camera.far = 650f;
         camera.update();
 
         ModelBuilder modelBuilder = new ModelBuilder();
 //        model = modelBuilder.createBox(5f, 5f, 5f, new Material(ColorAttribute.createDiffuse(Color.GREEN)), Usage.Position | Usage.Normal);
         model = modelBuilder.createBox(5f, 5f, 5f, new Material(TextureAttribute.createDiffuse(img32), ColorAttribute.createSpecular(1, 1, 1, 1), FloatAttribute.createShininess(8f)), Usage.Position | Usage.Normal | Usage.TextureCoordinates);
-        wallModel = modelBuilder.createBox(50f, .1f, 50f, new Material(TextureAttribute.createDiffuse(img), ColorAttribute.createSpecular(1, 1, 1, 1), FloatAttribute.createShininess(8f)), Usage.Position | Usage.Normal | Usage.TextureCoordinates);
+        wallModel = modelBuilder.createBox(500f, .1f, 500f, new Material(TextureAttribute.createDiffuse(img), ColorAttribute.createSpecular(1, 1, 1, 1), FloatAttribute.createShininess(8f)), Usage.Position | Usage.Normal | Usage.TextureCoordinates);
         modelInstance = new ModelInstance(model);
         modelInstance.transform.translate(0, 2.5f, 0);
         wallModelInstance = new ModelInstance(wallModel);
@@ -101,7 +94,8 @@ public class Game extends ApplicationAdapter {
         Gdx.input.setCursorPosition((int) centerX, (int) centerY);
 
         assetManager = new AssetManager();
-        assetManager.load("data/starskybox.g3db", Model.class);
+        assetManager.load("data/starlitsky.g3db", Model.class);
+        assetManager.load("data/block.g3db", Model.class);
 
         loading = true;
 
@@ -111,7 +105,9 @@ public class Game extends ApplicationAdapter {
 
 	private void load() {
 
-        skyBox = new ModelInstance(assetManager.get("data/starskybox.g3db", Model.class));
+        skyBox = new ModelInstance(assetManager.get("data/starlitsky.g3db", Model.class));
+
+        building = new ModelInstance(assetManager.get("data/block.g3db", Model.class));
 
         loading = false;
 
@@ -132,8 +128,8 @@ public class Game extends ApplicationAdapter {
         float dX = 0;
         float dY = 0;
         if(centerMouse) {
-            dX = MathUtils.floor(centerX - Gdx.input.getX());
-            dY = MathUtils.floor(centerY - Gdx.input.getY());
+            dX = MathUtils.floor(centerX - Gdx.input.getX()) * .5f;
+            dY = MathUtils.floor(centerY - Gdx.input.getY()) * .5f;
             Gdx.input.setCursorPosition((int) centerX, (int) centerY);
             camera.rotate(camera.direction.cpy().crs(Vector3.Y), dY);
             camera.rotate(Vector3.Y, dX);
@@ -141,6 +137,8 @@ public class Game extends ApplicationAdapter {
         if(Gdx.input.isKeyPressed(Input.Keys.W)) {
             Vector3 v = camera.direction.cpy();
             v.y = 0f;
+            v.x *= .75f;
+            v.z *= .75f;
             camera.translate(v);
             camera.update();
         }
@@ -149,6 +147,8 @@ public class Game extends ApplicationAdapter {
             v.y = 0f;
             v.x = -v.x;
             v.z = -v.z;
+            v.x *= .75f;
+            v.z *= .75f;
             camera.translate(v);
             camera.update();
         }
@@ -156,12 +156,16 @@ public class Game extends ApplicationAdapter {
             Vector3 v = camera.direction.cpy();
             v.y = 0f;
             v.rotate(Vector3.Y, -90);
+            v.x *= .75f;
+            v.z *= .75f;
             camera.translate(v);
         }
         if(Gdx.input.isKeyPressed(Input.Keys.A)) {
             Vector3 v = camera.direction.cpy();
             v.y = 0f;
             v.rotate(Vector3.Y, 90);
+            v.x *= .75f;
+            v.z *= .75f;
             camera.translate(v);
         }
         if(camera.position.y > 7) {
@@ -175,17 +179,17 @@ public class Game extends ApplicationAdapter {
         }
         camera.translate(new Vector3(0, velY, 0));
 //        Gdx.graphics.setTitle(camera.position.toString());
-        if(camera.position.x  > 23f) {
-            camera.position.x = 23f;
+        if(camera.position.x  > 247f) {
+            camera.position.x = 247f;
         }
-        if(camera.position.x < -23f) {
-            camera.position.x = -23f;
+        if(camera.position.x < -247f) {
+            camera.position.x = -247f;
         }
-        if(camera.position.z  > 23f) {
-            camera.position.z = 23f;
+        if(camera.position.z  > 247f) {
+            camera.position.z = 247f;
         }
-        if(camera.position.z < -23f) {
-            camera.position.z = -23f;
+        if(camera.position.z < -247f) {
+            camera.position.z = -247f;
         }
         if(Gdx.input.isKeyPressed(Input.Keys.SHIFT_LEFT)) {
             camera.position.y -= 1;
@@ -206,6 +210,7 @@ public class Game extends ApplicationAdapter {
 //        modelBatch.render(wallModelInstance4, environment);
 //        modelBatch.render(wallModelInstance5, environment);
         if(skyBox != null) modelBatch.render(skyBox);
+        if(skyBox != null) modelBatch.render(building);
         modelBatch.end();
 	}
 	
